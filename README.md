@@ -1,9 +1,10 @@
 # FindSeasonalJobApp — App tìm việc thời vụ (Project)
 
 ## Update code
-Nếu muốn chỉnh sửa code hãy fork trước
+Nếu muốn chỉnh sửa code hãy fork trước.
 
 ## Clone Project
+Mở terminal.
 - git clone `https://github.com/Dellta7/FindSeasonalJobApp.git`
 - cd `FindSeasonalJobApp`
 - code .
