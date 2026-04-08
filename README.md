@@ -1,9 +1,9 @@
 # FindSeasonalJobApp — App tìm việc thời vụ (Project mẫu)
 
 ## Clone Project
-git clone https://github.com/Dellta7/FindSeasonalJobApp/
-cd FindSeasonalJobApp
-code .
+- git clone https://github.com/Dellta7/FindSeasonalJobApp.git
+- cd FindSeasonalJobApp
+- code .
 
 ## Chạy project
 Yêu cầu: Node.js + npm, Expo CLI (dùng qua `npx expo` cũng được).
