@@ -20,16 +20,25 @@ export function JobCard({ job, onPress, isFavorite, onToggleFavorite }) {
         </Pressable>
       </View>
 
-      <Text style={styles.sub} numberOfLines={1}>
-        {job.companyName} • {job.location}
+      <Text style={styles.company} numberOfLines={1}>
+        {job.companyName}
       </Text>
 
-      <View style={styles.metaRow}>
-        <Text style={styles.meta} numberOfLines={1}>
-          {job.salaryText}
+      <View style={styles.infoRow}>
+        <Text style={styles.muted} numberOfLines={1}>
+          {job.location}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
+        <Text style={styles.muted} numberOfLines={1}>
           {job.workTimeText}
+        </Text>
+      </View>
+
+      <View style={styles.bottomRow}>
+        <Text style={styles.tag} numberOfLines={1}>
+          {job.category}
+        </Text>
+        <Text style={styles.salary} numberOfLines={1}>
+          {job.salaryText}
         </Text>
       </View>
     </Pressable>
@@ -59,16 +68,35 @@ const styles = StyleSheet.create({
   badge: {
     fontSize: 16,
   },
-  sub: {
-    color: '#6b7280',
-    marginTop: 4,
+  company: {
+    color: '#111827',
+    marginTop: 6,
+    fontWeight: '600',
   },
-  metaRow: {
+  infoRow: {
+    marginTop: 6,
+    gap: 4,
+  },
+  muted: {
+    color: '#6b7280',
+  },
+  bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    alignItems: 'center',
+    marginTop: 10,
   },
-  meta: {
+  tag: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  salary: {
+    fontWeight: '700',
     color: '#111827',
   },
 });

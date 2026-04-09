@@ -29,6 +29,7 @@ Yêu cầu: Node.js + npm, Expo CLI (dùng qua `npx expo` cũng được).
 
 ## Luồng demo hiện có (MVP)
 - Danh sách việc + tìm kiếm theo từ khoá
+- Chip lọc cơ bản theo địa điểm và lĩnh vực
 - Xem chi tiết việc
 - Lưu/huỷ lưu yêu thích
 - Form “Đăng ký quan tâm” (demo bằng Alert)
