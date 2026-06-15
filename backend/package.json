@@ -1,0 +1,17 @@
+{
+  "name": "findseasonaljob-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "mysql2": "^3.14.2",
+    "selfsigned": "^2.4.1"
+  }
+}
