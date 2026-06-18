@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { JobCard } from '../components/JobCard';
+import { SalaryRangeFilter } from '../components/SalaryRangeFilter';
 
 export function HomeScreen({
   jobs,
@@ -34,7 +35,8 @@ export function HomeScreen({
   const [query, setQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('Tất cả');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
-  const [selectedSalary, setSelectedSalary] = useState('Tất cả');
+  const [selectedMinSalary, setSelectedMinSalary] = useState(0);
+  const [selectedMaxSalary, setSelectedMaxSalary] = useState(1000);
   const [selectedWorkTime, setSelectedWorkTime] = useState('Tất cả');
   const [activeFilterPanel, setActiveFilterPanel] = useState(null);
   const [filterSearch, setFilterSearch] = useState('');
@@ -57,6 +59,21 @@ export function HomeScreen({
     return ['Tất cả', ...Array.from(uniq)];
   }, [jobs]);
 
+  // Parse salary text to numeric value (in thousand VND)
+  const parseSalaryValue = (salaryText) => {
+    if (!salaryText) return 0;
+    const match = salaryText.match(/^(\d+(?:\.\d+)?)\s*([a-z]+)/i);
+    if (!match) return 0;
+
+    let [, amount, unit] = match;
+    amount = parseFloat(amount);
+
+    if (unit.toLowerCase() === 'triệu') {
+      return amount * 1000; // Triệu -> ngàn
+    }
+    return amount; // Mặc định là k (ngàn)
+  };
+
   const workTimeOptions = useMemo(() => {
     const uniq = new Set(jobs.map((j) => j.workTimeText).filter(Boolean));
     return ['Tất cả', ...Array.from(uniq)];
@@ -71,9 +88,14 @@ export function HomeScreen({
       if (selectedCategory !== 'Tất cả' && job.category !== selectedCategory) {
         return false;
       }
-      if (selectedSalary !== 'Tất cả' && job.salaryText !== selectedSalary) {
-        return false;
+      // Filter by salary range
+      const salaryValue = parseSalaryValue(job.salaryText);
+      if (salaryValue > 0) {
+        if (salaryValue < selectedMinSalary || salaryValue > selectedMaxSalary) {
+          return false;
+        }
       }
+
       if (selectedWorkTime !== 'Tất cả' && job.workTimeText !== selectedWorkTime) {
         return false;
       }
@@ -87,12 +109,13 @@ export function HomeScreen({
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     
     return result;
-  }, [jobs, query, selectedLocation, selectedCategory, selectedSalary, selectedWorkTime]);
+  }, [jobs, query, selectedLocation, selectedCategory, selectedMinSalary, selectedMaxSalary, selectedWorkTime, parseSalaryValue]);
 
   const handleClearFilters = () => {
     setSelectedLocation('Tất cả');
     setSelectedCategory('Tất cả');
-    setSelectedSalary('Tất cả');
+    setSelectedMinSalary(0);
+    setSelectedMaxSalary(1000);
     setSelectedWorkTime('Tất cả');
     setQuery('');
     setFilterSearch('');
@@ -223,6 +246,7 @@ export function HomeScreen({
                     setFilterSearch('');
                   }}
                 >
+                  <MaterialIcons name="work-outline" size={18} color={selectedCategory !== 'Tất cả' ? '#fff' : '#475569'} style={{ marginRight: 6 }} />
                   <Text style={[styles.filterButtonText, selectedCategory !== 'Tất cả' && styles.filterButtonTextActive]}>
                     Lĩnh vực
                   </Text>
@@ -230,11 +254,12 @@ export function HomeScreen({
                 <Pressable
                   style={[
                     styles.filterButton,
-                    selectedSalary !== 'Tất cả' && styles.filterButtonActive,
+                    (selectedMinSalary !== 0 || selectedMaxSalary !== 1000) && styles.filterButtonActive,
                   ]}
                   onPress={() => setActiveFilterPanel('salary')}
                 >
-                  <Text style={[styles.filterButtonText, selectedSalary !== 'Tất cả' && styles.filterButtonTextActive]}>
+                  <MaterialIcons name="attach-money" size={18} color={(selectedMinSalary !== 0 || selectedMaxSalary !== 1000) ? '#fff' : '#475569'} style={{ marginRight: 6 }} />
+                  <Text style={[styles.filterButtonText, (selectedMinSalary !== 0 || selectedMaxSalary !== 1000) && styles.filterButtonTextActive]}>
                     Lương
                   </Text>
                 </Pressable>
@@ -245,18 +270,18 @@ export function HomeScreen({
                   ]}
                   onPress={() => setActiveFilterPanel('workTime')}
                 >
+                  <MaterialIcons name="schedule" size={18} color={selectedWorkTime !== 'Tất cả' ? '#fff' : '#475569'} style={{ marginRight: 6 }} />
                   <Text style={[styles.filterButtonText, selectedWorkTime !== 'Tất cả' && styles.filterButtonTextActive]}>
-                    Loại công việc
+                    Thời gian
                   </Text>
                 </Pressable>
               </ScrollView>
-
-              {(selectedLocation !== 'Tất cả' || selectedCategory !== 'Tất cả' || selectedSalary !== 'Tất cả' || selectedWorkTime !== 'Tất cả') && (
+              {(selectedLocation !== 'Tất cả' || selectedCategory !== 'Tất cả' || selectedMinSalary !== 0 || selectedMaxSalary !== 1000 || selectedWorkTime !== 'Tất cả') && (
                 <View style={styles.activeFiltersRow}>
                   {[
                     selectedLocation !== 'Tất cả' ? `Khu vực: ${selectedLocation}` : null,
                     selectedCategory !== 'Tất cả' ? `Ngành: ${selectedCategory}` : null,
-                    selectedSalary !== 'Tất cả' ? `Lương: ${selectedSalary}` : null,
+                    (selectedMinSalary !== 0 || selectedMaxSalary !== 1000) ? `Lương: ${selectedMinSalary}k - ${selectedMaxSalary}k` : null,
                     selectedWorkTime !== 'Tất cả' ? `Loại: ${selectedWorkTime}` : null,
                   ]
                     .filter(Boolean)
@@ -314,55 +339,64 @@ export function HomeScreen({
                 />
               </View>
             )}
-            <ScrollView style={styles.locationList}>
-              {(
-                activeFilterPanel === 'location' ? locationOptions :
-                activeFilterPanel === 'category' ? categoryOptions :
-                activeFilterPanel === 'salary' ? salaryOptions :
-                activeFilterPanel === 'workTime' ? workTimeOptions :
-                []
-              ).map((value) => (
-                <Pressable
-                  key={value}
-                  style={[
-                    styles.locationOption,
-                    (activeFilterPanel === 'location' && value === selectedLocation) ||
-                    (activeFilterPanel === 'category' && value === selectedCategory) ||
-                    (activeFilterPanel === 'salary' && value === selectedSalary) ||
-                    (activeFilterPanel === 'workTime' && value === selectedWorkTime)
-                      ? styles.locationOptionSelected
-                      : null,
-                  ]}
-                  onPress={() => {
-                    if (activeFilterPanel === 'location') {
-                      setSelectedLocation(value);
-                      setLocationSearch('');
-                    } else if (activeFilterPanel === 'category') {
-                      setSelectedCategory(value);
-                      setLocationSearch('');
-                    } else if (activeFilterPanel === 'salary') {
-                      setSelectedSalary(value);
-                    } else if (activeFilterPanel === 'workTime') {
-                      setSelectedWorkTime(value);
-                    }
-                    setActiveFilterPanel(null);
-                  }}
-                >
-                  <Text
+            {activeFilterPanel === 'salary' && (
+              <SalaryRangeFilter
+                jobs={jobs}
+                selectedMin={selectedMinSalary}
+                selectedMax={selectedMaxSalary}
+                onChange={(min, max) => {
+                  setSelectedMinSalary(min);
+                  setSelectedMaxSalary(max);
+                  setActiveFilterPanel(null);
+                }}
+              />
+            )}
+            {(activeFilterPanel === 'location' || activeFilterPanel === 'category' || activeFilterPanel === 'workTime') && (
+              <ScrollView style={styles.locationList}>
+                {(
+                  activeFilterPanel === 'location' ? locationOptions :
+                  activeFilterPanel === 'category' ? categoryOptions :
+                  activeFilterPanel === 'workTime' ? workTimeOptions :
+                  []
+                ).map((value) => (
+                  <Pressable
+                    key={value}
                     style={[
-                      styles.locationOptionText,
-                      ((activeFilterPanel === 'location' && value === selectedLocation) ||
+                      styles.locationOption,
+                      (activeFilterPanel === 'location' && value === selectedLocation) ||
                       (activeFilterPanel === 'category' && value === selectedCategory) ||
-                      (activeFilterPanel === 'salary' && value === selectedSalary) ||
-                      (activeFilterPanel === 'workTime' && value === selectedWorkTime)) &&
-                        styles.locationOptionTextSelected,
+                      (activeFilterPanel === 'workTime' && value === selectedWorkTime)
+                        ? styles.locationOptionSelected
+                        : null,
                     ]}
+                    onPress={() => {
+                      if (activeFilterPanel === 'location') {
+                        setSelectedLocation(value);
+                        setLocationSearch('');
+                      } else if (activeFilterPanel === 'category') {
+                        setSelectedCategory(value);
+                        setLocationSearch('');
+                      } else if (activeFilterPanel === 'workTime') {
+                        setSelectedWorkTime(value);
+                      }
+                      setActiveFilterPanel(null);
+                    }}
                   >
-                    {value}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+                    <Text
+                      style={[
+                        styles.locationOptionText,
+                        ((activeFilterPanel === 'location' && value === selectedLocation) ||
+                        (activeFilterPanel === 'category' && value === selectedCategory) ||
+                        (activeFilterPanel === 'workTime' && value === selectedWorkTime)) &&
+                          styles.locationOptionTextSelected,
+                      ]}
+                    >
+                      {value}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
@@ -457,12 +491,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1.5,
+    borderColor: '#bfdbfe',
     marginRight: 8,
   },
   filterMainButtonText: {
@@ -471,28 +505,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   filterButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#e2e8f0',
     marginRight: 8,
   },
   filterButtonActive: {
     backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
+    borderColor: '#1d4ed8',
   },
   filterButtonText: {
     fontSize: 14,
     color: '#475569',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   filterButtonTextActive: {
     color: '#fff',
+    fontWeight: '700',
   },
   activeFiltersRow: {
     flexDirection: 'row',

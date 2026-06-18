@@ -14,12 +14,65 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { SalaryInput } from '../components/SalaryInput';
 
 function trimOrNull(value) {
   if (value == null) return null;
   const s = String(value).trim();
   return s.length ? s : null;
 }
+
+const WORK_TIME_PRESETS = [
+  '6:00 - 12:00',
+  '7:00 - 13:00',
+  '8:00 - 17:00',
+  '9:00 - 18:00',
+  '10:00 - 19:00',
+  '14:00 - 22:00',
+  '16:00 - 22:00',
+  '17:00 - 23:00',
+  '18:00 - 23:00',
+  '19:00 - 24:00',
+  'Toàn thời gian',
+  'Bán thời gian',
+];
+
+const POPULAR_CATEGORIES = [
+  'Bán lẻ / Cửa hàng',
+  'F&B',
+  'Giao hàng nhanh',
+  'Kho vận',
+  'Vận chuyển',
+  'Văn phòng',
+  'Bảo vệ',
+  'Dạy kèm / Gia sư',
+  'Lập trình / IT',
+  'Marketing / Truyền thông',
+  'Thiết kế / Đồ họa',
+  'Thợ cơ khí / Kỹ thuật',
+  'Nông nghiệp',
+  'Du lịch / Tour guide',
+  'Tạo tóc / Spa / Làm đẹp',
+  'Chăm sóc sức khỏe',
+  'Xây dựng / Sửa chữa',
+  'Điện - Nước - Gas',
+  'Giặt ủi / Giặt khô',
+  'Lao động chân tay',
+  'Nhân sự / Tuyển dụng',
+  'Tài chính / Kế toán',
+  'Bán hàng / Kinh doanh',
+  'Call center / Tư vấn khách hàng',
+  'Vệ sinh công nghiệp',
+  'Lái xe / Vận chuyển hàng',
+  'Hành chính / Thư ký',
+  'Nha sĩ / Y tế',
+  'Dưỡng lão / Chăm sóc trẻ em',
+  'Nấu ăn / Đầu bếp',
+  'Học tập / Ôn thi',
+  'Thể thao / Fitness',
+  'Công việc theo mùa',
+  'Khác',
+];
 
 export function JobFormScreen({
   mode, // 'create' | 'edit'
@@ -75,7 +128,8 @@ export function JobFormScreen({
     if (Array.isArray(categories) && categories.length > 0) {
       return categories.map((cat) => cat.name).filter(Boolean);
     }
-    return [];
+    // Sử dụng danh sách lĩnh vực phổ biến nếu không có từ API
+    return POPULAR_CATEGORIES;
   }, [categories]);
 
   const filteredCategoryItems = useMemo(() => {
@@ -84,6 +138,16 @@ export function JobFormScreen({
     if (!query) return availableCategories;
     return availableCategories.filter((item) => item.toLowerCase().includes(query));
   }, [availableCategories, locationSearch]);
+
+  const parseWorkTime = (timeStr) => {
+    if (!timeStr) return { start: '', end: '' };
+    const [start, end] = timeStr.split('-').map((t) => t.trim());
+    return { start: start || '', end: end || '' };
+  };
+
+  const workTime = parseWorkTime(workTimeText);
+
+
 
   const canSubmit = useMemo(() => {
     return (
@@ -213,29 +277,19 @@ export function JobFormScreen({
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Lĩnh vực *</Text>
-              {availableCategories.length > 0 ? (
-                <Pressable
-                  style={styles.selectInput}
-                  onPress={() => {
-                    setLocationModalStage('category');
-                    setLocationSearch('');
-                    setShowCategoryModal(true);
-                  }}
-                >
-                  <Text style={[styles.selectText, !category ? styles.placeholderText : null]}>
-                    {category || 'Chọn lĩnh vực'}
-                  </Text>
-                  <MaterialIcons name="keyboard-arrow-right" size={22} color="#64748b" />
-                </Pressable>
-              ) : (
-                <TextInput
-                  placeholder="Ví dụ: F&B, Bán lẻ, Kho vận"
-                  value={category}
-                  onChangeText={setCategory}
-                  style={styles.input}
-                  placeholderTextColor="#94a3b8"
-                />
-              )}
+              <Pressable
+                style={styles.selectInput}
+                onPress={() => {
+                  setLocationModalStage('category');
+                  setLocationSearch('');
+                  setShowCategoryModal(true);
+                }}
+              >
+                <Text style={[styles.selectText, !category ? styles.placeholderText : null]}>
+                  {category || 'Chọn lĩnh vực'}
+                </Text>
+                <MaterialIcons name="keyboard-arrow-right" size={22} color="#64748b" />
+              </Pressable>
             </View>
           </View>
 
@@ -246,20 +300,18 @@ export function JobFormScreen({
             </View>
             
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mức lương</Text>
-              <TextInput
-                placeholder="Ví dụ: 25.000đ/giờ"
+              <Text style={styles.label}>Mức lương (k = nghìn, m = triệu)</Text>
+              <SalaryInput
                 value={salaryText}
-                onChangeText={setSalaryText}
-                style={styles.input}
-                placeholderTextColor="#94a3b8"
+                onChange={setSalaryText}
+                placeholder="Ví dụ: 20 k/giờ hoặc 5 m/ngày"
               />
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Thời gian làm việc</Text>
               <TextInput
-                placeholder="Ví dụ: 17:00 - 22:00"
+                placeholder="Ví dụ: 08:00 - 17:00"
                 value={workTimeText}
                 onChangeText={setWorkTimeText}
                 style={styles.input}
@@ -306,7 +358,6 @@ export function JobFormScreen({
             </Text>
           </Pressable>
         </ScrollView>
-
         <Modal
           visible={showLocationModal || showCategoryModal}
           animationType="slide"
@@ -478,6 +529,34 @@ const styles = StyleSheet.create({
   inputMultiline: {
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  timePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 12,
+  },
+  timePickerBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    gap: 8,
+  },
+  timePickerBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
+  timePickerSeparator: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#94a3b8',
   },
   submitBtn: {
     margin: 20,

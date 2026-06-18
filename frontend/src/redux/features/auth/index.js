@@ -1,2 +1,2 @@
-export { default as authReducer } from './authSlice';
+export { default } from './authSlice';
 export { loginSuccess, logoutSuccess, updateUser } from './authSlice';
