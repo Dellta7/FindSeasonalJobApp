@@ -5,7 +5,7 @@ Nếu muốn chỉnh sửa code hãy fork trước.
 
 ## Clone Project
 Mở terminal.
-- git clone `https://github.com/Dellta7/FindSeasonalJobApp.git`
+- git clone `https://github.com/FedoraTran/FindSeasonalJobApp.git`
 - cd `FindSeasonalJobApp`
 - code .
 
@@ -22,8 +22,7 @@ App đã được nâng cấp để lấy dữ liệu thật từ backend MySQL 
 
 ### 1) Chuẩn bị MySQL
 - Đảm bảo MySQL đang chạy.
-- Có thể chạy script tạo DB + table tại `backend/sql/init.sql`.
-  (Script cũng seed sẵn 3 job mẫu nếu bảng `jobs` đang rỗng.)
+- Có thể chạy script tạo DB + table tại `FindSeasonalJobApp.sql`.
 
 ### 2) Chạy backend
 Mở terminal:
